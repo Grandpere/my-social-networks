@@ -1,3 +1,7 @@
 #index:
 #    path: /
 #    controller: App\Controller\DefaultController::index
+connect_oauth_check:
+  path: /connect/{service}/check
+  controller: Symfony\Bundle\FrameworkBundle\Controller\TemplateController
+  schemes: [https]
