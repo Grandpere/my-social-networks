@@ -2,11 +2,11 @@
 
 namespace App\Controller;
 
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use KnpU\OAuth2ClientBundle\Client\ClientRegistry;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use KnpU\OAuth2ClientBundle\Client\Provider\FacebookClient;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 
 class FacebookController extends AbstractController
 {
@@ -15,11 +15,12 @@ class FacebookController extends AbstractController
      *
      * @Route("/connect/facebook", name="connect_facebook_start")
      */
-    public function connectAction(ClientRegistry $clientRegistry)
+    public function connectAction(ClientRegistry $clientRegistry): RedirectResponse
     {
         // on Symfony 3.3 or lower, $clientRegistry = $this->get('knpu.oauth2.registry');
 
         // will redirect to Facebook!
+        /** @var FacebookClient */
         return $clientRegistry
             ->getClient('facebook') // key used in config/packages/knpu_oauth2_client.yaml
             ->redirect([

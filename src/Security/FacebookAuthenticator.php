@@ -14,7 +14,6 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Http\Util\TargetPathTrait;
 use KnpU\OAuth2ClientBundle\Client\Provider\FacebookClient;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use KnpU\OAuth2ClientBundle\Security\Authenticator\SocialAuthenticator;
@@ -46,9 +45,10 @@ class FacebookAuthenticator extends SocialAuthenticator
     private $passwordEncoder;
 
     /**
-     * FacebookAuthenticator constructor.
      * @param ClientRegistry $clientRegistry
      * @param EntityManagerInterface $em
+     * @param RouterInterface $router
+     * @param UserPasswordEncoderInterface $passwordEncoder
      */
     public function __construct(ClientRegistry $clientRegistry, EntityManagerInterface $em, RouterInterface $router, UserPasswordEncoderInterface $passwordEncoder)
     {
@@ -59,30 +59,13 @@ class FacebookAuthenticator extends SocialAuthenticator
     }
 
     /**
-     * Called when authentication is needed, but it's not sent.
-     * This redirects to the 'login'.
-     *
-     * @param Request $request
-     * @param AuthenticationException|null $authException
-     *
-     * @return RedirectResponse
-     */
-    public function start(Request $request, AuthenticationException $authException = null)
-    {
-        return new RedirectResponse(
-            '/connect/', // might be the site, where users choose their oauth provider
-            Response::HTTP_TEMPORARY_REDIRECT
-        );
-    }
-
-    /**
      * @param Request $request
      * @return bool
      */
     public function supports(Request $request)
     {
         // continue ONLY if the current ROUTE matches the check ROUTE
-        return 'connect_oauth_check' === $request->attributes->get('_route') && $request->get('service') === 'facebook';
+        return 'connect_oauth_check' === $request->attributes->get('_route') && 'facebook' === $request->get('service');
     }
 
     /**
@@ -151,10 +134,6 @@ class FacebookAuthenticator extends SocialAuthenticator
      */
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception)
     {
-        // $message = strtr($exception->getMessageKey(), $exception->getMessageData());
-
-        // return new Response($message, Response::HTTP_FORBIDDEN);
-
         if ($request->hasSession()) {
             $request->getSession()->set(Security::AUTHENTICATION_ERROR, $exception);
         }
@@ -171,10 +150,25 @@ class FacebookAuthenticator extends SocialAuthenticator
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, $providerKey)
     {
         $targetPath = $this->getTargetPath($request->getSession(), $providerKey);
+        
         return new RedirectResponse($targetPath ?: $this->router->generate('app_home'));
     
         // or, on success, let the request continue to be handled by the controller
         //return null;
+    }
+
+    /**
+     * Called when authentication is needed, but it's not sent.
+     * This redirects to the 'login'.
+     *
+     * @param Request $request
+     * @param AuthenticationException|null $authException
+     *
+     * @return RedirectResponse
+     */
+    public function start(Request $request, AuthenticationException $authException = null)
+    {
+        return new RedirectResponse($this->router->generate('app_login'));
     }
 
     public function supportsRememberMe(): bool
