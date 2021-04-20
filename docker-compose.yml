@@ -57,6 +57,7 @@ services:
 
     nginx:
         image: nginx:1.19-alpine
+        restart: always
         ports:
             - "8080:80"
         volumes:
@@ -76,6 +77,7 @@ services:
         build:
             context: ./
         working_dir: /var/www/api
+        restart: always
         environment:
             APP_ENV: dev
             DATABASE_URL: "postgresql://main:main@db:5432/main?sslmode=disable&charset=utf8"
